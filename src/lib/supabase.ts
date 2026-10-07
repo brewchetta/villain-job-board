@@ -12,5 +12,9 @@ export function createSupabaseClient() {
     );
   }
 
-  return createClient(url, key, { auth: { persistSession: false } });
+  // Keep only the origin so a trailing slash or path (e.g. /rest/v1) in the
+  // env var can't produce a malformed request URL.
+  const origin = new URL(url.trim()).origin;
+
+  return createClient(origin, key.trim(), { auth: { persistSession: false } });
 }

@@ -17,6 +17,10 @@ const coreBeliefs = [
     title: "Every minion can bloom",
     body: "We hire for ambition and train for the rest. Today's henchperson is tomorrow's mastermind.",
   },
+  {
+    title: "We're Evil, Not Monsters",
+    body: "We scheme, conquer, and menace, but we have manners. Fair wages, proper breaks, and nobody goes to the sharks without a hearing.",
+  },
 ];
 
 export default function Home() {
