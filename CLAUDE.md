@@ -30,8 +30,8 @@ This is Next 16.x with breaking changes from older versions (see `AGENTS.md`). R
 ## Architecture
 
 - `src/lib/jobs.ts` is the only data access point: async `getJobs()` and `getJobById(id)` over an in-memory mock array. Pages must go through these, so the later Supabase swap only touches this file (and `src/lib/types.ts`).
-- `src/lib/types.ts` holds the `Job` type. It currently has only placeholder fields (`id`, `title`, `summary`); the real posting fields are still to be decided with the user. Ask before inventing them.
+- `src/lib/types.ts` holds the `Job` type: `id`, `title`, `summary`, `pay` (string), `location` (string), and `benefits`, `qualifications`, `disclaimers` (all `string[]`). The field set was specified by the user; ask before adding or changing fields. Types are display-oriented and should be revisited when designing the Supabase schema.
 - Routes (server components): `/` (mission statement and core beliefs), `/jobs` (list), `/jobs/[id]` (show page). The show page uses `generateStaticParams` over `getJobs()` so the build can prerender it, and calls `notFound()` for unknown ids. Unknown ids are rendered at request time, so they return the 404 UI with HTTP 200 (documented streaming behavior).
 - `src/app/layout.tsx` holds the site-wide metadata and the minimal Home / Jobs nav.
 
-Planned next steps, in order: define job posting fields (ask the user), connect Supabase, then style.
+Planned next steps, in order: connect Supabase, then style.
