@@ -35,3 +35,8 @@ This is Next 16.x with breaking changes from older versions (see `AGENTS.md`). R
 - `src/app/layout.tsx` holds the site-wide metadata and the minimal Home / Jobs nav.
 
 Planned next steps, in order: connect Supabase, then style.
+
+## Future features (not started)
+
+- **Candidate matching:** match a candidate to jobs based on things like qualifications. Note that `Job.qualifications` is currently free-text `string[]`, which may need structuring to support matching.
+- **Resume uploads:** a service for uploading resumes still needs to be chosen. Supabase Storage is one option since Supabase is already planned; discuss with the user before picking.
