@@ -1,7 +1,14 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Creepster } from "next/font/google";
 import "./globals.css";
+
+const display = Creepster({
+  variable: "--font-display",
+  subsets: ["latin"],
+  weight: "400",
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,10 +27,28 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable} ${display.variable}`}
+    >
       <body>
-        <nav>
-          <Link href="/">Home</Link> | <Link href="/jobs">Jobs</Link>
+        <nav className="site-nav">
+          <div className="site-nav-inner">
+            <Link href="/" className="site-nav-brand">
+              <Image
+                src="/logo.png"
+                alt=""
+                width={799}
+                height={1080}
+                sizes="48px"
+                preload
+                style={{ height: 48, width: "auto" }}
+              />
+              The Garden
+            </Link>
+            <Link href="/">Home</Link>
+            <Link href="/jobs">Jobs</Link>
+          </div>
         </nav>
         {children}
       </body>

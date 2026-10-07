@@ -35,7 +35,7 @@ export default function Home() {
 
       <section>
         <h2>Core Beliefs</h2>
-        <ul>
+        <ul className="card-list">
           {coreBeliefs.map((belief) => (
             <li key={belief.title}>
               <h3>{belief.title}</h3>
@@ -48,7 +48,9 @@ export default function Home() {
       <section>
         <h2>Join Us</h2>
         <p>
-          <Link href="/jobs">Browse open positions</Link>
+          <Link href="/jobs" className="button">
+            Browse open positions
+          </Link>
         </p>
       </section>
     </main>

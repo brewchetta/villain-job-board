@@ -11,7 +11,7 @@ export default async function JobsPage() {
   return (
     <main>
       <h1>Open Positions</h1>
-      <ul>
+      <ul className="card-list">
         {jobs.map((job) => (
           <li key={job.id}>
             <h2>

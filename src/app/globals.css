@@ -1,17 +1,18 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #0d1a11;
+  --surface: #15281b;
+  --foreground: #f3ead7;
+  --muted: #b9c2a8;
+  --green: #8bc34a;
+  --green-bright: #a6dc5f;
+  --red: #8b1020;
+  --red-bright: #b3162b;
+  --trim: #f3ead7;
 }
 
 html {
   height: 100%;
+  color-scheme: dark;
 }
 
 html,
@@ -26,7 +27,8 @@ body {
   flex-direction: column;
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -42,8 +44,144 @@ a {
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+/* Nav: Santa-suit red with a cream fur trim */
+.site-nav {
+  background: var(--red);
+  border-bottom: 6px solid var(--trim);
+}
+
+.site-nav-inner {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0.5rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.site-nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-right: auto;
+  font-family: var(--font-display), cursive;
+  font-size: 1.75rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+.site-nav a:hover {
+  color: var(--green-bright);
+}
+
+/* Page content */
+main {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display), cursive;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  line-height: 1.15;
+}
+
+h1 {
+  font-size: 3.25rem;
+  color: var(--green);
+  margin-bottom: 1.5rem;
+}
+
+h2 {
+  font-size: 2rem;
+  color: var(--foreground);
+  margin: 2.5rem 0 0.75rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 3px solid var(--red-bright);
+}
+
+h3 {
+  font-size: 1.4rem;
+  color: var(--green);
+  margin-bottom: 0.25rem;
+}
+
+p + p {
+  margin-top: 0.75rem;
+}
+
+main a {
+  color: var(--green);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+main a:hover {
+  color: var(--green-bright);
+}
+
+/* Plain lists (benefits, qualifications, disclaimers) */
+main ul {
+  padding-left: 1.25rem;
+}
+
+main li::marker {
+  color: var(--red-bright);
+}
+
+/* Card lists (core beliefs, job listings) */
+.card-list {
+  list-style: none;
+  padding-left: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.card-list > li {
+  background: var(--surface);
+  border-left: 6px solid var(--red-bright);
+  border-radius: 6px;
+  padding: 1rem 1.25rem;
+}
+
+.card-list > li:hover {
+  border-left-color: var(--green);
+}
+
+.card-list h2 {
+  font-size: 1.6rem;
+  margin: 0 0 0.25rem;
+  padding: 0;
+  border-bottom: 0;
+}
+
+.card-list h2 a {
+  color: var(--green);
+  text-decoration: none;
+}
+
+.card-list p {
+  color: var(--muted);
+}
+
+/* Call to action */
+main a.button {
+  display: inline-block;
+  background: var(--red);
+  color: var(--foreground);
+  border: 2px solid var(--trim);
+  border-radius: 999px;
+  padding: 0.6rem 1.5rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+main a.button:hover {
+  background: var(--red-bright);
+  color: var(--foreground);
 }
