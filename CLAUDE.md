@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Job board for "The Garden", a fictional super villain organization. Next.js (App Router, TypeScript, `src/` dir) with Supabase planned as the database. Supabase is **not connected yet**: all job data is mocked. Styling is intentionally deferred, so pages use plain unstyled markup and there is no Tailwind.
+Job board for "The Garden", a fictional super villain organization. Next.js (App Router, TypeScript, `src/` dir) with Supabase as the database. Jobs are read from the `jobs` table; the schema and seed data live in `supabase/schema.sql` and must be run manually in the Supabase SQL editor (no migration tooling yet).
+
+Env vars (server-only, no `NEXT_PUBLIC_` prefix): `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`, set in `.env.local` (see `.env.example`). Do not read `.env*` files. Styling is plain CSS in `src/app/globals.css` (no Tailwind): a Grinch-style theme of dark green background, Grinch-green headings, and dark red nav/accents with cream trim. Colors are CSS variables in `:root`; headings use the "Creepster" font (single weight, keep `font-weight: 400`) via `next/font` (`--font-display`). Shared class hooks: `.site-nav*`, `.card-list`, `a.button`.
 
 ## Commands
 
@@ -29,12 +31,10 @@ This is Next 16.x with breaking changes from older versions (see `AGENTS.md`). R
 
 ## Architecture
 
-- `src/lib/jobs.ts` is the only data access point: async `getJobs()` and `getJobById(id)` over an in-memory mock array. Pages must go through these, so the later Supabase swap only touches this file (and `src/lib/types.ts`).
+- `src/lib/jobs.ts` is the only data access point: async `getJobs()` and `getJobById(id)`, querying Supabase through `createSupabaseClient()` in `src/lib/supabase.ts`. Both are wrapped in `'use cache'` with `cacheLife("minutes")` and `cacheTag("jobs")` (plus `job:<id>`), which Cache Components requires since the Supabase client uses `fetch`. Use `revalidateTag("jobs")` after any future write. Table columns match the `Job` type exactly, so there is no mapping layer; if you change `Job`, update `supabase/schema.sql` and the `select(...)` lists too.
 - `src/lib/types.ts` holds the `Job` type: `id`, `title`, `summary`, `pay` (string), `location` (string), and `benefits`, `qualifications`, `disclaimers` (all `string[]`). The field set was specified by the user; ask before adding or changing fields. Types are display-oriented and should be revisited when designing the Supabase schema.
 - Routes (server components): `/` (mission statement and core beliefs), `/jobs` (list), `/jobs/[id]` (show page). The show page uses `generateStaticParams` over `getJobs()` so the build can prerender it, and calls `notFound()` for unknown ids. Unknown ids are rendered at request time, so they return the 404 UI with HTTP 200 (documented streaming behavior).
-- `src/app/layout.tsx` holds the site-wide metadata and the minimal Home / Jobs nav.
-
-Planned next steps, in order: connect Supabase, then style.
+- `src/app/layout.tsx` holds the site-wide metadata, fonts, and the nav (logo from `public/logo.png`, Home / Jobs links).
 
 ## Future features (not started)
 
