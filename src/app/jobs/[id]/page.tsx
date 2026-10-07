@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { getJobById, getJobs } from "@/lib/jobs";
+import { ApplySection } from "./apply-section";
 
 export async function generateStaticParams() {
   const jobs = await getJobs();
@@ -62,6 +64,13 @@ export default async function JobPage({
             <li key={item}>{item}</li>
           ))}
         </ul>
+      </section>
+
+      <section>
+        <h2>Apply</h2>
+        <Suspense fallback={<p>Loading...</p>}>
+          <ApplySection jobId={job.id} />
+        </Suspense>
       </section>
     </main>
   );

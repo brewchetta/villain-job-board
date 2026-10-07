@@ -286,3 +286,28 @@ main a.button:hover {
 .link-button:hover {
   color: var(--green-bright);
 }
+
+/* Applications */
+.status {
+  text-transform: capitalize;
+  color: var(--green);
+}
+
+.inline-form {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+
+.inline-form .link-button {
+  color: var(--green);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.form-error-inline {
+  color: var(--muted);
+  border-left: 4px solid var(--red-bright);
+  padding-left: 0.5rem;
+}

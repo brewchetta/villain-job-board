@@ -189,3 +189,136 @@ on conflict (id) do nothing;
 
 -- To make someone an admin, run (as the SQL Editor's postgres role):
 --   update public.profiles set role = 'admin' where id = '<user uuid>';
+
+-- ---------------------------------------------------------------------------
+-- Applications: a candidate applying to a job
+-- ---------------------------------------------------------------------------
+
+create table if not exists public.applications (
+  id             uuid primary key default gen_random_uuid(),
+  -- restrict: a job with applications can't be deleted by accident.
+  job_id         text not null references public.jobs (id) on delete restrict,
+  user_id        uuid not null references public.profiles (id) on delete cascade,
+  status         text not null default 'submitted'
+                   check (status in ('submitted', 'reviewing', 'interviewing', 'offered', 'rejected', 'withdrawn')),
+  -- An employee's id, entered by the candidate. Free text for now: there is no
+  -- employees table to validate against yet.
+  referral_code  text check (referral_code is null or char_length(referral_code) <= 50),
+  -- Copy of the candidate's profiles.resume_id at the moment they applied.
+  resume_id      uuid,
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now(),
+  unique (job_id, user_id)
+);
+
+create index if not exists applications_user_id_idx on public.applications (user_id);
+
+create or replace function public.set_updated_at()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists applications_set_updated_at on public.applications;
+create trigger applications_set_updated_at
+  before update on public.applications
+  for each row execute function public.set_updated_at();
+
+alter table public.applications enable row level security;
+
+drop policy if exists "Candidates can read own applications" on public.applications;
+create policy "Candidates can read own applications"
+  on public.applications for select
+  to authenticated
+  using ((select auth.uid()) = user_id);
+
+drop policy if exists "Admins can read all applications" on public.applications;
+create policy "Admins can read all applications"
+  on public.applications for select
+  to authenticated
+  using (public.is_admin());
+
+drop policy if exists "Admins can update applications" on public.applications;
+create policy "Admins can update applications"
+  on public.applications for update
+  to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
+
+-- No direct writes for candidates: they apply and withdraw through the
+-- functions below. Only the status column is updatable, and only admins have a
+-- policy that allows it.
+revoke insert, update, delete on public.applications from anon, authenticated;
+grant select on public.applications to authenticated;
+grant update (status) on public.applications to authenticated;
+
+-- Apply to a job (or re-apply after withdrawing). Returns the application id.
+create or replace function public.apply_to_job(
+  p_job_id text,
+  p_referral_code text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_user uuid := (select auth.uid());
+  v_id uuid;
+begin
+  if v_user is null then
+    raise exception 'You must be signed in to apply.';
+  end if;
+
+  insert into public.applications (job_id, user_id, referral_code, resume_id)
+  values (
+    p_job_id,
+    v_user,
+    nullif(left(btrim(p_referral_code), 50), ''),
+    (select resume_id from public.profiles where id = v_user)
+  )
+  on conflict (job_id, user_id) do update
+    set status = 'submitted',
+        referral_code = excluded.referral_code,
+        resume_id = excluded.resume_id
+    where public.applications.status = 'withdrawn'
+  returning id into v_id;
+
+  -- The conflict branch only fires for withdrawn applications.
+  if v_id is null then
+    raise exception 'You have already applied to this job.';
+  end if;
+
+  return v_id;
+end;
+$$;
+
+-- Withdraw one of your own applications (not once it has been rejected).
+create or replace function public.withdraw_application(p_application_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  update public.applications
+     set status = 'withdrawn'
+   where id = p_application_id
+     and user_id = (select auth.uid())
+     and status in ('submitted', 'reviewing', 'interviewing', 'offered');
+
+  if not found then
+    raise exception 'Application not found, or it can no longer be withdrawn.';
+  end if;
+end;
+$$;
+
+revoke execute on function public.apply_to_job(text, text) from public, anon;
+revoke execute on function public.withdraw_application(uuid) from public, anon;
+grant execute on function public.apply_to_job(text, text) to authenticated;
+grant execute on function public.withdraw_application(uuid) to authenticated;

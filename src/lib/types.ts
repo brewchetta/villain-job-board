@@ -27,3 +27,20 @@ export type FormState = {
   // Echoed back so the form can repopulate after a failed submit (never the password).
   values?: Record<string, string>;
 };
+
+export type ApplicationStatus =
+  | "submitted"
+  | "reviewing"
+  | "interviewing"
+  | "offered"
+  | "rejected"
+  | "withdrawn";
+
+export type Application = {
+  id: string;
+  job_id: string;
+  job_title: string;
+  status: ApplicationStatus;
+  referral_code: string | null;
+  created_at: string;
+};

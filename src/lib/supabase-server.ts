@@ -1,6 +1,7 @@
 import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 
 // Per-request Supabase client that carries the signed-in user's session
 // (cookie-based). Use this for anything user-specific. Public, cacheable data
@@ -18,6 +19,9 @@ export async function createSupabaseServerClient() {
     );
   }
 
+  // Session handling reads the clock (token expiry), so make sure none of this
+  // runs while prerendering. Everything after this line is request-time only.
+  await connection();
   const cookieStore = await cookies();
 
   return createServerClient(new URL(url.trim()).origin, key.trim(), {
