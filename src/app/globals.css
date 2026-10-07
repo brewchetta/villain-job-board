@@ -185,3 +185,104 @@ main a.button:hover {
   background: var(--red-bright);
   color: var(--foreground);
 }
+
+/* Forms */
+.form {
+  display: grid;
+  gap: 1rem;
+  max-width: 28rem;
+  margin-bottom: 1.5rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.field span {
+  font-weight: 600;
+}
+
+.field small {
+  color: var(--muted);
+}
+
+.field input {
+  background: var(--surface);
+  color: var(--foreground);
+  border: 2px solid var(--red);
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  font: inherit;
+}
+
+.field input:focus {
+  outline: none;
+  border-color: var(--green);
+}
+
+.form button[type="submit"] {
+  justify-self: start;
+  background: var(--red);
+  color: var(--foreground);
+  border: 2px solid var(--trim);
+  border-radius: 999px;
+  padding: 0.6rem 1.5rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.form button[type="submit"]:hover:not(:disabled) {
+  background: var(--red-bright);
+}
+
+.form button[type="submit"]:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.form-error,
+.form-message {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border-left: 6px solid;
+  background: var(--surface);
+}
+
+.form-error {
+  border-color: var(--red-bright);
+}
+
+.form-message {
+  border-color: var(--green);
+}
+
+.details {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.25rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.details dt {
+  color: var(--muted);
+}
+
+/* Log out button styled like a nav link */
+.site-nav form {
+  display: contents;
+}
+
+.link-button {
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+
+.link-button:hover {
+  color: var(--green-bright);
+}

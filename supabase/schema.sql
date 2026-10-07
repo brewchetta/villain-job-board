@@ -69,3 +69,123 @@ values
    'Hybrid: headquarters library or an undisclosed remote location',
    array['Speeches are delivered at the client''s own risk.', 'The Garden is not liable if a hero escapes during the monologue.'])
 on conflict (id) do nothing;
+
+-- Additional jobs
+insert into public.jobs
+  (id, title, summary, pay, benefits, qualifications, location, disclaimers)
+values
+  ('mad-scientist',
+   'Mad Scientist',
+   'Conduct unethical research, invent unlikely contraptions, and laugh maniacally when experiments succeed. Ethics review boards are not provided.',
+   '$120,000 - $160,000 per year, plus patent royalties on all world-threatening inventions',
+   array['Fully equipped underground laboratory', 'Lightning rod installation at no cost', 'Hazard pay for experiments that go slightly wrong', 'Complimentary lab coat with goggles'],
+   array['PhD in a hard science (honorary degrees accepted with a good explanation)', 'Experience building prototypes that violate at least one law of physics', 'Comfortable working during thunderstorms', 'Willingness to ignore the phrase "this was a bad idea"'],
+   'Secret underground laboratory (location classified)',
+   array['The Garden is not responsible for creatures that escape the laboratory.', 'Experimental results may vary, including unintended sentience.']),
+  ('human-resources-manager',
+   'Human Resources Manager',
+   'Handle onboarding, payroll, and workplace disputes for a workforce of henchpeople, scientists, and minions. Exit interviews are conducted near the trapdoor.',
+   '$68,000 - $88,000 per year',
+   array['Comprehensive medical, dental, and vision', 'Soundproofed office', 'Panic button under the desk (functionality not guaranteed)', 'Generous paid time off, subject to the world domination schedule'],
+   array['Bachelor''s degree in human resources or a related field', '3+ years in HR, preferably with high-turnover workforces', 'Ability to mediate disputes between rival henchpeople', 'Discretion with confidential information, including secret identities'],
+   'Central Garden headquarters, Floor 2 (no windows)',
+   array['HR cannot intervene in disputes with the Director of Villainy.', 'Complaints about shark tank safety are filed under "ongoing".'])
+on conflict (id) do nothing;
+
+-- ---------------------------------------------------------------------------
+-- Profiles: one row per auth user (created automatically on sign-up)
+-- ---------------------------------------------------------------------------
+
+create table if not exists public.profiles (
+  id             uuid primary key references auth.users (id) on delete cascade,
+  role           text not null default 'candidate' check (role in ('candidate', 'admin')),
+  display_name   text,
+  first_name     text,
+  last_name      text,
+  -- id of the uploaded resume's row in storage.objects (Supabase Storage).
+  -- Deliberately no foreign key: storage.objects is managed by Supabase.
+  resume_id      uuid,
+  phone_number   text,
+  evil_nickname  text,
+  created_at     timestamptz not null default now()
+);
+
+alter table public.profiles enable row level security;
+
+-- Admin check as a security definer function so policies on profiles can use
+-- it without recursing into their own RLS.
+create or replace function public.is_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from public.profiles
+    where id = (select auth.uid()) and role = 'admin'
+  );
+$$;
+
+drop policy if exists "Users can read own profile" on public.profiles;
+create policy "Users can read own profile"
+  on public.profiles for select
+  to authenticated
+  using ((select auth.uid()) = id);
+
+drop policy if exists "Admins can read all profiles" on public.profiles;
+create policy "Admins can read all profiles"
+  on public.profiles for select
+  to authenticated
+  using (public.is_admin());
+
+drop policy if exists "Users can update own profile" on public.profiles;
+create policy "Users can update own profile"
+  on public.profiles for update
+  to authenticated
+  using ((select auth.uid()) = id)
+  with check ((select auth.uid()) = id);
+
+-- Users may edit their own details but must never be able to change their
+-- role (or id). Column-level grants enforce this on top of RLS.
+revoke insert, update, delete on public.profiles from anon, authenticated;
+grant select on public.profiles to authenticated;
+grant update (display_name, first_name, last_name, resume_id, phone_number, evil_nickname)
+  on public.profiles to authenticated;
+
+-- Create a profile whenever someone signs up. Optional name fields can be passed
+-- at sign-up via options.data. Role is NEVER read from user metadata, because
+-- users control that; everyone starts as 'candidate'.
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  insert into public.profiles
+    (id, display_name, first_name, last_name, phone_number, evil_nickname)
+  values (
+    new.id,
+    new.raw_user_meta_data ->> 'display_name',
+    new.raw_user_meta_data ->> 'first_name',
+    new.raw_user_meta_data ->> 'last_name',
+    new.raw_user_meta_data ->> 'phone_number',
+    new.raw_user_meta_data ->> 'evil_nickname'
+  );
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+
+-- Backfill profiles for any users created before this ran.
+insert into public.profiles (id)
+select id from auth.users
+on conflict (id) do nothing;
+
+-- To make someone an admin, run (as the SQL Editor's postgres role):
+--   update public.profiles set role = 'admin' where id = '<user uuid>';

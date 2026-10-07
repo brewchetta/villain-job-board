@@ -8,3 +8,22 @@ export type Job = {
   location: string;
   disclaimers: string[];
 };
+
+export type Profile = {
+  id: string;
+  role: "candidate" | "admin";
+  display_name: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  resume_id: string | null;
+  phone_number: string | null;
+  evil_nickname: string | null;
+};
+
+// Shared result shape for auth/profile form server actions.
+export type FormState = {
+  error?: string;
+  message?: string;
+  // Echoed back so the form can repopulate after a failed submit (never the password).
+  values?: Record<string, string>;
+};
