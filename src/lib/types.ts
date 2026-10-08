@@ -44,3 +44,15 @@ export type Application = {
   referral_code: string | null;
   created_at: string;
 };
+
+// Current conditions for one city on the front page; null fields mean the lookup failed.
+export type CityWeather = {
+  city: string;
+  current: {
+    temp_f: number;
+    temp_c: number;
+    condition: string;
+    humidity: number;
+    wind_mph: number;
+  } | null;
+};
