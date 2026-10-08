@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { WeatherSection } from "./weather";
 
 const coreBeliefs = [
   {
@@ -48,6 +49,8 @@ export default function Home() {
           ))}
         </ul>
       </section>
+
+      <WeatherSection />
 
       <section>
         <h2>Join Us</h2>

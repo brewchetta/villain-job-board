@@ -169,6 +169,21 @@ main li::marker {
   color: var(--muted);
 }
 
+/* Front-page weather cards */
+.card-list.weather-list {
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+}
+
+.weather-list p {
+  margin: 0.25rem 0;
+}
+
+.card-list .weather-temp {
+  color: var(--green-bright);
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
 /* Call to action */
 main a.button {
   display: inline-block;
