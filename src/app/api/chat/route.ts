@@ -1,4 +1,4 @@
-import { describeError, streamHrAnswer } from "@/lib/chat";
+import { chooseModel, describeError, streamHrAnswer } from "@/lib/chat";
 import { HR_FALLBACK_MESSAGE } from "@/lib/hr-contact";
 import { checkRateLimit } from "@/lib/rate-limit";
 import type { ChatMessage } from "@/lib/types";
@@ -60,7 +60,9 @@ export async function POST(request: Request) {
 
   // Pull the first chunk before replying so setup failures (missing key, docs or
   // API unreachable) can still return a real HTTP error instead of a broken stream.
-  const answer = streamHrAnswer(messages);
+  const model = await chooseModel(messages);
+  console.log(`HR chat routed to ${model}`);
+  const answer = streamHrAnswer(messages, model);
   let first: IteratorResult<string>;
   try {
     first = await answer.next();
@@ -96,6 +98,8 @@ export async function POST(request: Request) {
       "Cache-Control": "no-store",
       "X-Content-Type-Options": "nosniff",
       "X-Accel-Buffering": "no",
+      // Which model answered; handy when tuning the routing.
+      "X-HR-Model": model,
     },
   });
 }
