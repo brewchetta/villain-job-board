@@ -45,6 +45,12 @@ export type Application = {
   created_at: string;
 };
 
+// One turn of the HR chatbot conversation (the client sends the whole history each time).
+export type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
 // Current conditions for one city on the front page; null fields mean the lookup failed.
 export type CityWeather = {
   city: string;

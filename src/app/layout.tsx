@@ -50,6 +50,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </Link>
             <Link href="/">Home</Link>
             <Link href="/jobs">Jobs</Link>
+            <Link href="/chat">HR Chat</Link>
             <Suspense fallback={null}>
               <UserNav />
             </Suspense>

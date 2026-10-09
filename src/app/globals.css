@@ -273,6 +273,79 @@ main a.button:hover {
   border-color: var(--green);
 }
 
+/* HR chat */
+.chat-log {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.chat-message {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  max-width: 90%;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.chat-assistant {
+  background: var(--surface);
+  border-left: 6px solid var(--green);
+  justify-self: start;
+}
+
+.chat-user {
+  background: var(--red);
+  border: 2px solid var(--trim);
+  justify-self: end;
+}
+
+.chat-form {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.chat-label {
+  font-weight: 600;
+}
+
+.chat-form textarea {
+  background: var(--surface);
+  color: var(--foreground);
+  border: 2px solid var(--red);
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  font: inherit;
+  resize: vertical;
+}
+
+.chat-form textarea:focus {
+  outline: none;
+  border-color: var(--green);
+}
+
+.chat-form button[type="submit"] {
+  justify-self: start;
+  background: var(--red);
+  color: var(--foreground);
+  border: 2px solid var(--trim);
+  border-radius: 999px;
+  padding: 0.6rem 1.5rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chat-form button[type="submit"]:hover:not(:disabled) {
+  background: var(--red-bright);
+}
+
+.chat-form button[type="submit"]:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .details {
   display: grid;
   grid-template-columns: max-content 1fr;
