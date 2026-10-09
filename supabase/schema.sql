@@ -322,3 +322,56 @@ revoke execute on function public.apply_to_job(text, text) from public, anon;
 revoke execute on function public.withdraw_application(uuid) from public, anon;
 grant execute on function public.apply_to_job(text, text) to authenticated;
 grant execute on function public.withdraw_application(uuid) to authenticated;
+
+
+-- HR chatbot: vector search over the HR docs (pgvector).
+-- Filled by `npm run ingest` (scripts/ingest-hr-docs.ts) using the service-role key.
+-- The vector size must match EMBEDDING_DIMENSIONS in src/lib/embeddings.ts.
+create extension if not exists vector with schema extensions;
+
+create table if not exists public.hr_chunks (
+  id bigint generated always as identity primary key,
+  doc_code text not null,
+  doc_title text not null,
+  chunk_index int not null,
+  content text not null,
+  embedding extensions.vector(1024) not null
+);
+
+create index if not exists hr_chunks_embedding_idx
+  on public.hr_chunks using hnsw (embedding extensions.vector_cosine_ops);
+
+-- The HR docs are already public via their share links, so reads are open. There are
+-- no write policies: only the service-role key (which bypasses RLS) can change rows.
+alter table public.hr_chunks enable row level security;
+
+drop policy if exists "HR chunks are readable" on public.hr_chunks;
+create policy "HR chunks are readable" on public.hr_chunks
+  for select to anon, authenticated using (true);
+
+-- Closest chunks to a query vector, best first, dropping anything under min_similarity
+-- (cosine similarity: 1 is identical, near 0 is unrelated).
+create or replace function public.match_hr_chunks(
+  query_embedding extensions.vector(1024),
+  match_count int,
+  min_similarity float
+)
+returns table (doc_code text, doc_title text, content text, similarity float)
+language sql
+stable
+set search_path = ''
+as $$
+  select nearest.doc_code, nearest.doc_title, nearest.content, nearest.similarity
+  from (
+    select c.doc_code, c.doc_title, c.content,
+           1 - (c.embedding operator(extensions.<=>) query_embedding) as similarity
+    from public.hr_chunks c
+    order by c.embedding operator(extensions.<=>) query_embedding
+    limit match_count
+  ) nearest
+  where nearest.similarity >= min_similarity
+  order by nearest.similarity desc;
+$$;
+
+revoke execute on function public.match_hr_chunks(extensions.vector, int, float) from public;
+grant execute on function public.match_hr_chunks(extensions.vector, int, float) to anon, authenticated;

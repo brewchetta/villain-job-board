@@ -1,4 +1,4 @@
-import { chooseModel, describeError, streamHrAnswer } from "@/lib/chat";
+import { chooseModel, describeError, loadHrContext, streamHrAnswer, type HrContext } from "@/lib/chat";
 import { HR_FALLBACK_MESSAGE } from "@/lib/hr-contact";
 import { checkRateLimit } from "@/lib/rate-limit";
 import type { ChatMessage } from "@/lib/types";
@@ -58,11 +58,22 @@ export async function POST(request: Request) {
     );
   }
 
-  // Pull the first chunk before replying so setup failures (missing key, docs or
-  // API unreachable) can still return a real HTTP error instead of a broken stream.
-  const model = await chooseModel(messages);
-  console.log(`HR chat routed to ${model}`);
-  const answer = streamHrAnswer(messages, model);
+  // Choosing the model and finding the relevant HR text are independent, so run
+  // them together. chooseModel never rejects; loadHrContext only rejects when the
+  // retrieval fallback (all docs) fails too.
+  let model: string;
+  let context: HrContext;
+  try {
+    [model, context] = await Promise.all([chooseModel(messages), loadHrContext(messages)]);
+  } catch (err) {
+    console.error("HR chat failed:", describeError(err));
+    return Response.json({ error: HR_FALLBACK_MESSAGE }, { status: 503 });
+  }
+  console.log(`HR chat routed to ${model}; context: ${context.mode} (${context.detail})`);
+
+  // Pull the first chunk before replying so setup failures (missing key, API
+  // unreachable) can still return a real HTTP error instead of a broken stream.
+  const answer = streamHrAnswer(messages, model, context);
   let first: IteratorResult<string>;
   try {
     first = await answer.next();
@@ -100,6 +111,9 @@ export async function POST(request: Request) {
       "X-Accel-Buffering": "no",
       // Which model answered; handy when tuning the routing.
       "X-HR-Model": model,
+      // How the HR text was chosen, and which docs the excerpts came from.
+      "X-HR-Context": context.mode,
+      ...(context.mode === "retrieval" && { "X-HR-Sources": context.sources.join(",") || "none" }),
     },
   });
 }
