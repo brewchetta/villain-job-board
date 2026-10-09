@@ -273,16 +273,98 @@ main a.button:hover {
   border-color: var(--green);
 }
 
-/* HR chat */
-.chat-log {
-  display: grid;
+/* HR chat: floating widget on every page (see src/app/chat-widget.tsx) */
+.chat-launcher {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 60;
+  background: var(--red);
+  color: var(--foreground);
+  border: 2px solid var(--trim);
+  border-radius: 999px;
+  padding: 0.7rem 1.4rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.5);
+}
+
+.chat-launcher:hover {
+  background: var(--red-bright);
+}
+
+.chat-panel {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
   gap: 0.75rem;
-  margin-bottom: 1rem;
+  width: min(22rem, calc(100vw - 2rem));
+  height: min(32rem, calc(100dvh - 2rem));
+  padding: 0 0.75rem 0.75rem;
+  background: var(--background);
+  border: 2px solid var(--red-bright);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgb(0 0 0 / 0.6);
+}
+
+.chat-panel-expanded {
+  width: min(44rem, calc(100vw - 2rem));
+  /* Leave the site nav visible above it. */
+  height: min(46rem, calc(100dvh - 6rem));
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 -0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--red);
+  border-radius: 8px 8px 0 0;
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.25rem;
+  font-weight: 400;
+}
+
+.chat-header strong {
+  font-weight: 400;
+}
+
+.chat-header-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.chat-header-actions button {
+  background: none;
+  border: 0;
+  border-radius: 4px;
+  color: var(--foreground);
+  font: 1.1rem/1 system-ui, sans-serif;
+  padding: 0.3rem 0.5rem;
+  cursor: pointer;
+}
+
+.chat-header-actions button:hover {
+  background: var(--red-bright);
+}
+
+.chat-log {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .chat-message {
   margin: 0;
-  padding: 0.75rem 1rem;
+  padding: 0.6rem 0.85rem;
   border-radius: 6px;
   max-width: 90%;
   white-space: pre-wrap;
@@ -292,13 +374,17 @@ main a.button:hover {
 .chat-assistant {
   background: var(--surface);
   border-left: 6px solid var(--green);
-  justify-self: start;
+  align-self: flex-start;
 }
 
 .chat-user {
   background: var(--red);
   border: 2px solid var(--trim);
-  justify-self: end;
+  align-self: flex-end;
+}
+
+.chat-panel .form-error {
+  margin: 0;
 }
 
 .chat-form {
@@ -306,8 +392,14 @@ main a.button:hover {
   gap: 0.5rem;
 }
 
+/* Visually hidden, but still read by screen readers. */
 .chat-label {
-  font-weight: 600;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .chat-form textarea {

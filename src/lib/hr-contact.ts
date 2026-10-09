@@ -2,7 +2,7 @@
 export const HR_CONTACT = {
   name: "Mortimer Gloom",
   title: "Director of Henchperson Relations",
-  phone: "(555) 010-0142",
+  phone: "1-800-BAD-GUYS",
 };
 
 export const HR_CONTACT_LINE = `${HR_CONTACT.name}, ${HR_CONTACT.title}, at ${HR_CONTACT.phone}`;

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
+import { ChatWidget } from "./chat-widget";
 import { UserNav } from "./user-nav";
 import { Geist, Geist_Mono, Creepster } from "next/font/google";
 import "./globals.css";
@@ -50,13 +51,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </Link>
             <Link href="/">Home</Link>
             <Link href="/jobs">Jobs</Link>
-            <Link href="/chat">HR Chat</Link>
             <Suspense fallback={null}>
               <UserNav />
             </Suspense>
           </div>
         </nav>
         {children}
+        <ChatWidget />
       </body>
     </html>
   );
