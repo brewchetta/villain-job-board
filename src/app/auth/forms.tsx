@@ -13,6 +13,8 @@ function Field({
   defaultValue,
   required,
   autoComplete,
+  minLength,
+  maxLength,
   hint,
 }: {
   label: string;
@@ -21,6 +23,8 @@ function Field({
   defaultValue?: string;
   required?: boolean;
   autoComplete?: string;
+  minLength?: number;
+  maxLength?: number;
   hint?: string;
 }) {
   return (
@@ -32,6 +36,8 @@ function Field({
         defaultValue={defaultValue}
         required={required}
         autoComplete={autoComplete}
+        minLength={minLength}
+        maxLength={maxLength}
       />
       {hint ? <small>{hint}</small> : null}
     </label>
@@ -58,7 +64,7 @@ export function SignUpForm() {
     <form action={action} key={formKey(state)} className="form">
       <Status state={state} />
       <Field label="Email" name="email" type="email" required autoComplete="email" defaultValue={v.email} />
-      <Field label="Password" name="password" type="password" required autoComplete="new-password" hint="At least 8 characters." />
+      <Field label="Password" name="password" type="password" required autoComplete="new-password" minLength={8} maxLength={72} hint="8 to 72 characters." />
       <Field label="First name" name="first_name" autoComplete="given-name" defaultValue={v.first_name} />
       <Field label="Last name" name="last_name" autoComplete="family-name" defaultValue={v.last_name} />
       <Field label="Display name" name="display_name" defaultValue={v.display_name} />

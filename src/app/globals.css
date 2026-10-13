@@ -169,6 +169,24 @@ main li::marker {
   color: var(--muted);
 }
 
+/* Pagination under the job list */
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.pagination a {
+  font-weight: 700;
+}
+
+.pagination span {
+  color: var(--muted);
+}
+
 /* Front-page weather cards */
 .card-list.weather-list {
   grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
