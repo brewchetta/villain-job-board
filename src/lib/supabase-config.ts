@@ -23,7 +23,15 @@ const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
 // var can't produce a malformed request URL. Passwords, tokens and the key all
 // travel to this origin, so refuse plain http except for local development.
 export function getSupabaseOrigin(url: string): string {
-  const parsed = new URL(url.trim());
+  let parsed: URL;
+  try {
+    parsed = new URL(url.trim());
+  } catch {
+    // Don't include the value: it may be a mis-pasted secret.
+    throw new Error(
+      "SUPABASE_URL is not a valid URL. It should look like https://<project-ref>.supabase.co.",
+    );
+  }
   const isLocalHttp = parsed.protocol === "http:" && LOCAL_HOSTS.has(parsed.hostname);
 
   if (parsed.protocol !== "https:" && !isLocalHttp) {
