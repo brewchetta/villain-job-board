@@ -12,7 +12,7 @@
 export const SUPABASE_COOKIE_OPTIONS = {
   path: "/",
   sameSite: "lax",
-  httpOnly: true,
+  httpOnly: false,
   secure: process.env.NODE_ENV === "production",
   maxAge: 60 * 60 * 24 * 7,
 } as const;

@@ -13,7 +13,7 @@ export async function getJobs(): Promise<Job[]> {
   const { data, error } = await createSupabaseClient()
     .from("jobs")
     .select("id, title, summary, pay, benefits, qualifications, location, disclaimers")
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: false });
 
   if (error) throw new Error(`Failed to load jobs: ${error.message}`);
   return data;

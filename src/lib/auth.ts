@@ -24,7 +24,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
 export async function requireUser(): Promise<SessionUser> {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) redirect("/login");
+  if (error || !data.user) redirect("/signup");
   return { id: data.user.id, email: data.user.email };
 }
 
