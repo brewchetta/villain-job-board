@@ -40,8 +40,12 @@ describe("getSupabaseOrigin", () => {
   });
 
   it("throws on a malformed URL", () => {
-    expect(() => getSupabaseOrigin("not a url")).toThrow();
-    expect(() => getSupabaseOrigin("")).toThrow();
+    expect(() => getSupabaseOrigin("not a url")).toThrow(/not a valid URL/);
+    expect(() => getSupabaseOrigin("")).toThrow(/not a valid URL/);
+  });
+
+  it("does not echo the malformed value in the error", () => {
+    expect(() => getSupabaseOrigin("secret-looking-value")).not.toThrow(/secret-looking-value/);
   });
 });
 
