@@ -1,3 +1,4 @@
+import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { createSupabaseClient } from "./supabase";
 import type { Job } from "./types";

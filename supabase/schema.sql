@@ -201,8 +201,9 @@ create table if not exists public.applications (
   user_id        uuid not null references public.profiles (id) on delete cascade,
   status         text not null default 'submitted'
                    check (status in ('submitted', 'reviewing', 'interviewing', 'offered', 'rejected', 'withdrawn')),
-  -- An employee's id, entered by the candidate. Free text for now: there is no
-  -- employees table to validate against yet.
+  -- An employee's id, entered by the candidate. apply_to_job checks it against
+  -- public.employees; there is deliberately no foreign key, so removing an
+  -- employee later never blocks or rewrites a past application.
   referral_code  text check (referral_code is null or char_length(referral_code) <= 50),
   -- Copy of the candidate's profiles.resume_id at the moment they applied.
   resume_id      uuid,
@@ -257,7 +258,30 @@ revoke insert, update, delete on public.applications from anon, authenticated;
 grant select on public.applications to authenticated;
 grant update (status) on public.applications to authenticated;
 
+-- Employees: the people whose ids are valid referral codes. Candidates must not
+-- be able to list this table (the ids would then be free referral codes for
+-- anyone), so there are no policies and no grants: only apply_to_job, which runs
+-- as its owner, reads it. Manage rows from the SQL editor. The rows below are
+-- sample data; replace them with real employees.
+create table if not exists public.employees (
+  id          text primary key check (char_length(id) between 1 and 50),
+  name        text not null,
+  created_at  timestamptz not null default now()
+);
+
+alter table public.employees enable row level security;
+revoke all on public.employees from anon, authenticated;
+
+insert into public.employees (id, name)
+values
+  ('E-1001', 'Dr. Thorn'),
+  ('E-1002', 'Madame Nightshade'),
+  ('E-1003', 'Baron Von Bramble'),
+  ('E-1042', 'Lady Hemlock')
+on conflict (id) do nothing;
+
 -- Apply to a job (or re-apply after withdrawing). Returns the application id.
+-- A referral code is optional, but if one is given it must be an employee's id.
 create or replace function public.apply_to_job(
   p_job_id text,
   p_referral_code text default null
@@ -269,17 +293,23 @@ set search_path = ''
 as $$
 declare
   v_user uuid := (select auth.uid());
+  v_code text := nullif(left(btrim(p_referral_code), 50), '');
   v_id uuid;
 begin
   if v_user is null then
     raise exception 'You must be signed in to apply.';
   end if;
 
+  if v_code is not null
+     and not exists (select 1 from public.employees where id = v_code) then
+    raise exception 'That referral code doesn''t match any employee. Check it and try again, or leave it blank.';
+  end if;
+
   insert into public.applications (job_id, user_id, referral_code, resume_id)
   values (
     p_job_id,
     v_user,
-    nullif(left(btrim(p_referral_code), 50), ''),
+    v_code,
     (select resume_id from public.profiles where id = v_user)
   )
   on conflict (job_id, user_id) do update

@@ -2,6 +2,7 @@ import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { connection } from "next/server";
+import { SUPABASE_COOKIE_OPTIONS, getSupabaseOrigin } from "./supabase-config";
 
 // Per-request Supabase client that carries the signed-in user's session
 // (cookie-based). Use this for anything user-specific. Public, cacheable data
@@ -24,7 +25,8 @@ export async function createSupabaseServerClient() {
   await connection();
   const cookieStore = await cookies();
 
-  return createServerClient(new URL(url.trim()).origin, key.trim(), {
+  return createServerClient(getSupabaseOrigin(url), key.trim(), {
+    cookieOptions: SUPABASE_COOKIE_OPTIONS,
     cookies: {
       getAll() {
         return cookieStore.getAll();

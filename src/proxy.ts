@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { SUPABASE_COOKIE_OPTIONS, getSupabaseOrigin } from "./lib/supabase-config";
 
 // Keeps the Supabase session fresh: refreshes expiring tokens and writes the
 // updated cookies to both the request (so server code sees them) and the
@@ -13,9 +14,19 @@ export async function proxy(request: NextRequest) {
   // surface a clear error instead.
   if (!url || !key) return NextResponse.next({ request });
 
+  // Same for a malformed or non-https SUPABASE_URL: data access throws the
+  // clear error, so public pages keep working.
+  let origin: string;
+  try {
+    origin = getSupabaseOrigin(url);
+  } catch {
+    return NextResponse.next({ request });
+  }
+
   let response = NextResponse.next({ request });
 
-  const supabase = createServerClient(new URL(url.trim()).origin, key.trim(), {
+  const supabase = createServerClient(origin, key.trim(), {
+    cookieOptions: SUPABASE_COOKIE_OPTIONS,
     cookies: {
       getAll() {
         return request.cookies.getAll();

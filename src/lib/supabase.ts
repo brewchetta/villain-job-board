@@ -1,4 +1,6 @@
+import "server-only";
 import { createClient } from "@supabase/supabase-js";
+import { getSupabaseOrigin } from "./supabase-config";
 
 // Server-only: these env vars have no NEXT_PUBLIC_ prefix, so they are never
 // sent to the browser. Only import this module from server code.
@@ -12,9 +14,5 @@ export function createSupabaseClient() {
     );
   }
 
-  // Keep only the origin so a trailing slash or path (e.g. /rest/v1) in the
-  // env var can't produce a malformed request URL.
-  const origin = new URL(url.trim()).origin;
-
-  return createClient(origin, key.trim(), { auth: { persistSession: false } });
+  return createClient(getSupabaseOrigin(url), key.trim(), { auth: { persistSession: false } });
 }
