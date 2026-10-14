@@ -29,7 +29,7 @@ export function greetingName(profile: NameParts | null): string {
 }
 
 // siteUrl is the site's origin (see normalizeSiteUrl). Without it the email
-// still works but has no logo and no link, since mail clients need absolute URLs.
+// still works but has no link, since mail clients need absolute URLs.
 export function hiredEmail({
   name,
   jobTitle,
@@ -94,7 +94,7 @@ export const defaultIssue: NewsletterIssue = {
 };
 
 // siteUrl is the site's origin (see normalizeSiteUrl); without it there is no
-// logo and no button, as with hiredEmail.
+// button, as with hiredEmail.
 export function newsletterEmail({
   issue = defaultIssue,
   siteUrl,

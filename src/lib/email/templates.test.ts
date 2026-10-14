@@ -36,10 +36,10 @@ describe("hiredEmail", () => {
     expect(email.html).toContain("#8b1020");
   });
 
-  it("adds the logo and an account link in both versions when given a site URL", () => {
+  it("adds an account link in both versions when given a site URL", () => {
     const withSite = hiredEmail({ name: "Doom Spoon", jobTitle: "Henchperson", siteUrl: "https://garden.example" });
 
-    expect(withSite.html).toContain('src="https://garden.example/logo.png"');
+    expect(withSite.html).not.toContain("<img");
     expect(withSite.html).toContain('href="https://garden.example/account"');
     expect(withSite.text).toContain("https://garden.example/account");
   });
@@ -76,10 +76,10 @@ describe("newsletterEmail", () => {
     expect(email.text).not.toContain("http");
   });
 
-  it("adds the logo and a jobs link in both versions when given a site URL", () => {
+  it("adds a jobs link in both versions when given a site URL", () => {
     const email = newsletterEmail({ siteUrl: "https://garden.example" });
 
-    expect(email.html).toContain('src="https://garden.example/logo.png"');
+    expect(email.html).not.toContain("<img");
     expect(email.html).toContain('href="https://garden.example/jobs"');
     expect(email.text).toContain("https://garden.example/jobs");
   });

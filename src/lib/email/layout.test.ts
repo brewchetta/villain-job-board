@@ -46,10 +46,10 @@ describe("emailLayout", () => {
     expect(html).toContain("<title>Hello</title>");
   });
 
-  it("only includes the logo when a site URL is given", () => {
+  it("leaves the logo out for now, even with a site URL", () => {
     expect(html).not.toContain("<img");
-    expect(emailLayout({ title: "t", body: "", footer: "", siteUrl: "https://garden.example" })).toContain(
-      'src="https://garden.example/logo.png"',
+    expect(emailLayout({ title: "t", body: "", footer: "", siteUrl: "https://garden.example" })).not.toContain(
+      "<img",
     );
   });
 });

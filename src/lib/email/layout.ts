@@ -19,6 +19,11 @@ const COLORS = {
 const DISPLAY_FONT = "'Creepster', Impact, 'Arial Black', sans-serif";
 const BODY_FONT = "Arial, Helvetica, sans-serif";
 
+// The header logo is switched off for now because it did not render in the
+// mail client (a localhost SITE_URL can't be loaded). Set to true once the site
+// is deployed and SITE_URL is public.
+const SHOW_LOGO = false;
+
 // public/logo.png is 799x1080, shown 48px tall in the site nav.
 const LOGO_HEIGHT = 48;
 const LOGO_WIDTH = 36;
@@ -86,7 +91,7 @@ export function emailLayout({
   footer: string;
   siteUrl?: string;
 }): string {
-  const logo = siteUrl
+  const logo = SHOW_LOGO && siteUrl
     ? `<td style="padding-right:12px;"><img src="${escapeHtml(siteUrl)}/logo.png" alt="" width="${LOGO_WIDTH}" height="${LOGO_HEIGHT}" style="display:block;width:${LOGO_WIDTH}px;height:${LOGO_HEIGHT}px;border:0;"></td>`
     : "";
 

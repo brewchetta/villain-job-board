@@ -136,7 +136,7 @@ describe("applyToJob", () => {
       const email = mocks.sendEmail.mock.calls[0][0];
       expect(email.html).toContain("<!doctype html>");
       expect(email.html).toContain('href="https://garden.example/account"');
-      expect(email.html).toContain('src="https://garden.example/logo.png"');
+      expect(email.html).not.toContain("<img");
     });
 
     it("does not email when the application fails", async () => {
