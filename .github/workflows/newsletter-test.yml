@@ -6,8 +6,8 @@ name: Newsletter test send
 # monthly send should move to a vercel.json cron (see CLAUDE.md).
 on:
   schedule:
-    # Hourly at :17. GitHub's minimum is every 5 minutes, and runs can be late.
-    - cron: "17 * * * *"
+    # Hourly at :55. GitHub's minimum is every 5 minutes, and runs can be late.
+    - cron: "55 * * * *"
   workflow_dispatch:
 
 jobs:
