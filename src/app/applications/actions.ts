@@ -1,7 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireUser } from "@/lib/auth";
+import { after } from "next/server";
+import { getProfile, requireUser, type SessionUser } from "@/lib/auth";
+import { sendEmail } from "@/lib/email/client";
+import { greetingName, hiredEmail } from "@/lib/email/templates";
+import { getJobById } from "@/lib/jobs";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import type { FormState } from "@/lib/types";
 
@@ -16,12 +20,35 @@ function toMessage(error: { code?: string; message: string }) {
   return "Something went wrong. Please try again.";
 }
 
+// Henchmen are hired on the spot, so every successful application gets a
+// "you're hired" email. Runs after the response is sent and swallows every
+// failure: a missing email must never turn a saved application into an error.
+async function sendHiredEmail(user: SessionUser, jobId: string) {
+  if (!user.email) return;
+  try {
+    const [job, profile] = await Promise.all([
+      getJobById(jobId),
+      getProfile(user.id),
+    ]);
+    if (!job) return;
+    await sendEmail({
+      to: user.email,
+      ...hiredEmail({ name: greetingName(profile), jobTitle: job.title }),
+    });
+  } catch (error) {
+    console.error(
+      "Hired email failed:",
+      error instanceof Error ? error.name : "unknown error",
+    );
+  }
+}
+
 export async function applyToJob(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
   // Re-verify the user here; never trust that the page already did.
-  await requireUser();
+  const user = await requireUser();
 
   const jobId = String(formData.get("job_id") ?? "");
   const referralCode = String(formData.get("referral_code") ?? "")
@@ -39,6 +66,7 @@ export async function applyToJob(
 
   if (error) return { error: toMessage(error), values };
 
+  after(() => sendHiredEmail(user, jobId));
   revalidatePath(`/jobs/${jobId}`);
   revalidatePath("/account");
   return { message: "Application submitted. Good luck, villain." };
