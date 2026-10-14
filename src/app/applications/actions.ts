@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { getProfile, requireUser, type SessionUser } from "@/lib/auth";
 import { sendEmail } from "@/lib/email/client";
+import { normalizeSiteUrl } from "@/lib/email/layout";
 import { greetingName, hiredEmail } from "@/lib/email/templates";
 import { getJobById } from "@/lib/jobs";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
@@ -33,7 +34,11 @@ async function sendHiredEmail(user: SessionUser, jobId: string) {
     if (!job) return;
     await sendEmail({
       to: user.email,
-      ...hiredEmail({ name: greetingName(profile), jobTitle: job.title }),
+      ...hiredEmail({
+        name: greetingName(profile),
+        jobTitle: job.title,
+        siteUrl: normalizeSiteUrl(process.env.SITE_URL),
+      }),
     });
   } catch (error) {
     console.error(

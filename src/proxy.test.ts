@@ -115,7 +115,15 @@ describe("proxy matcher", () => {
     expect(pattern.test(path)).toBe(true);
   });
 
-  it.each(["/_next/static/chunk.js", "/_next/image", "/favicon.ico", "/logo.png", "/hero.webp", "/icon.svg"])(
+  it.each([
+    "/_next/static/chunk.js",
+    "/_next/image",
+    "/favicon.ico",
+    "/logo.png",
+    "/hero.webp",
+    "/icon.svg",
+    "/api/cron/newsletter",
+  ])(
     "skips %s",
     (path) => {
       expect(pattern.test(path)).toBe(false);

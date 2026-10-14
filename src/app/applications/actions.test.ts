@@ -127,6 +127,18 @@ describe("applyToJob", () => {
       expect(email.text).toContain("Henchperson");
     });
 
+    it("sends a styled HTML version, with site links when SITE_URL is set", async () => {
+      vi.stubEnv("SITE_URL", "https://garden.example/");
+
+      await applyToJob({}, form({ job_id: "henchperson" }));
+      await flushAfter();
+
+      const email = mocks.sendEmail.mock.calls[0][0];
+      expect(email.html).toContain("<!doctype html>");
+      expect(email.html).toContain('href="https://garden.example/account"');
+      expect(email.html).toContain('src="https://garden.example/logo.png"');
+    });
+
     it("does not email when the application fails", async () => {
       mocks.rpc.mockResolvedValue({ error: { code: "P0001", message: "You have already applied to this job." } });
 
