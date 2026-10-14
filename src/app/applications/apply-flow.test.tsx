@@ -51,7 +51,11 @@ const db = vi.hoisted(() => {
 });
 
 vi.mock("next/cache", () => ({ revalidatePath: db.revalidatePath }));
-vi.mock("@/lib/auth", () => ({ requireUser: db.requireUser }));
+// The "you're hired" email is covered in actions.test.ts; here it just must not run.
+vi.mock("next/server", () => ({ after: vi.fn() }));
+vi.mock("@/lib/auth", () => ({ requireUser: db.requireUser, getProfile: vi.fn() }));
+vi.mock("@/lib/jobs", () => ({ getJobById: vi.fn() }));
+vi.mock("@/lib/email/client", () => ({ sendEmail: vi.fn() }));
 vi.mock("@/lib/supabase-server", () => ({ createSupabaseServerClient: async () => ({ rpc: db.rpc }) }));
 
 import { ApplyForm, WithdrawButton } from "./forms";

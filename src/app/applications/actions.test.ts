@@ -3,15 +3,27 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   revalidatePath: vi.fn(),
   requireUser: vi.fn(),
+  getProfile: vi.fn(),
+  getJobById: vi.fn(),
+  sendEmail: vi.fn(),
+  after: vi.fn(),
   createSupabaseServerClient: vi.fn(),
   rpc: vi.fn(),
 }));
 
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
-vi.mock("@/lib/auth", () => ({ requireUser: mocks.requireUser }));
+vi.mock("next/server", () => ({ after: mocks.after }));
+vi.mock("@/lib/auth", () => ({ requireUser: mocks.requireUser, getProfile: mocks.getProfile }));
+vi.mock("@/lib/jobs", () => ({ getJobById: mocks.getJobById }));
+vi.mock("@/lib/email/client", () => ({ sendEmail: mocks.sendEmail }));
 vi.mock("@/lib/supabase-server", () => ({ createSupabaseServerClient: mocks.createSupabaseServerClient }));
 
 import { applyToJob, withdrawApplication } from "./actions";
+
+// The mocked after() runs its callback right away and keeps the promise, so a
+// test can wait for the "after the response" work to finish.
+let afterTasks: Promise<unknown>[] = [];
+const flushAfter = () => Promise.all(afterTasks);
 
 function form(fields: Record<string, string>) {
   const data = new FormData();
@@ -25,6 +37,18 @@ beforeEach(() => {
   mocks.requireUser.mockReset();
   mocks.requireUser.mockResolvedValue({ id: "u1", email: "a@b.co" });
   mocks.createSupabaseServerClient.mockResolvedValue({ rpc: mocks.rpc });
+
+  afterTasks = [];
+  mocks.after.mockReset();
+  mocks.after.mockImplementation((task: () => Promise<unknown>) => {
+    afterTasks.push(task());
+  });
+  mocks.getProfile.mockReset();
+  mocks.getProfile.mockResolvedValue({ evil_nickname: "Doom Spoon", first_name: "Ann", display_name: null });
+  mocks.getJobById.mockReset();
+  mocks.getJobById.mockResolvedValue({ id: "henchperson", title: "Henchperson" });
+  mocks.sendEmail.mockReset();
+  mocks.sendEmail.mockResolvedValue({ ok: true });
 });
 
 describe("applyToJob", () => {
@@ -85,6 +109,82 @@ describe("applyToJob", () => {
 
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/jobs/henchperson");
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/account");
+  });
+
+  describe("you're hired email", () => {
+    beforeEach(() => mocks.rpc.mockResolvedValue({ error: null }));
+
+    it("emails the applicant, addressed by nickname and naming the job", async () => {
+      await applyToJob({}, form({ job_id: "henchperson" }));
+      await flushAfter();
+
+      expect(mocks.getJobById).toHaveBeenCalledWith("henchperson");
+      expect(mocks.getProfile).toHaveBeenCalledWith("u1");
+      expect(mocks.sendEmail).toHaveBeenCalledOnce();
+      const email = mocks.sendEmail.mock.calls[0][0];
+      expect(email.to).toBe("a@b.co");
+      expect(email.subject).toBe("You're hired, Doom Spoon");
+      expect(email.text).toContain("Henchperson");
+    });
+
+    it("sends a styled HTML version, with site links when SITE_URL is set", async () => {
+      vi.stubEnv("SITE_URL", "https://garden.example/");
+
+      await applyToJob({}, form({ job_id: "henchperson" }));
+      await flushAfter();
+
+      const email = mocks.sendEmail.mock.calls[0][0];
+      expect(email.html).toContain("<!doctype html>");
+      expect(email.html).toContain('href="https://garden.example/account"');
+      expect(email.html).not.toContain("<img");
+    });
+
+    it("does not email when the application fails", async () => {
+      mocks.rpc.mockResolvedValue({ error: { code: "P0001", message: "You have already applied to this job." } });
+
+      await applyToJob({}, form({ job_id: "henchperson" }));
+      await flushAfter();
+
+      expect(mocks.after).not.toHaveBeenCalled();
+      expect(mocks.sendEmail).not.toHaveBeenCalled();
+    });
+
+    it("does not email when there is no job id", async () => {
+      await applyToJob({}, form({}));
+      await flushAfter();
+
+      expect(mocks.sendEmail).not.toHaveBeenCalled();
+    });
+
+    it("skips the email when the user has no address", async () => {
+      mocks.requireUser.mockResolvedValue({ id: "u1", email: undefined });
+
+      await applyToJob({}, form({ job_id: "henchperson" }));
+      await flushAfter();
+
+      expect(mocks.sendEmail).not.toHaveBeenCalled();
+    });
+
+    it("skips the email when the job cannot be found", async () => {
+      mocks.getJobById.mockResolvedValue(undefined);
+
+      await applyToJob({}, form({ job_id: "gone" }));
+      await flushAfter();
+
+      expect(mocks.sendEmail).not.toHaveBeenCalled();
+    });
+
+    it("still reports success when looking up the details or sending fails", async () => {
+      const log = vi.spyOn(console, "error").mockImplementation(() => {});
+      mocks.getProfile.mockRejectedValue(new Error("db down"));
+
+      const state = await applyToJob({}, form({ job_id: "henchperson" }));
+      await expect(flushAfter()).resolves.toBeDefined();
+
+      expect(state).toEqual({ message: "Application submitted. Good luck, villain." });
+      expect(mocks.sendEmail).not.toHaveBeenCalled();
+      expect(log).toHaveBeenCalled();
+    });
   });
 
   describe("errors", () => {
