@@ -16,6 +16,7 @@ export type Profile = {
   first_name: string | null;
   last_name: string | null;
   resume_id: string | null;
+  resume_path: string | null;
   phone_number: string | null;
   evil_nickname: string | null;
 };

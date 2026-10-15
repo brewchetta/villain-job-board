@@ -105,10 +105,16 @@ create table if not exists public.profiles (
   -- id of the uploaded resume's row in storage.objects (Supabase Storage).
   -- Deliberately no foreign key: storage.objects is managed by Supabase.
   resume_id      uuid,
+  -- Object path in the private `resumes` bucket: <user id>/resume.pdf|docx.
+  -- Downloads use the path, not the id.
+  resume_path    text,
   phone_number   text,
   evil_nickname  text,
   created_at     timestamptz not null default now()
 );
+
+-- For databases created before resume uploads existed.
+alter table public.profiles add column if not exists resume_path text;
 
 alter table public.profiles enable row level security;
 
@@ -150,8 +156,76 @@ create policy "Users can update own profile"
 -- role (or id). Column-level grants enforce this on top of RLS.
 revoke insert, update, delete on public.profiles from anon, authenticated;
 grant select on public.profiles to authenticated;
-grant update (display_name, first_name, last_name, resume_id, phone_number, evil_nickname)
+grant update (display_name, first_name, last_name, resume_id, resume_path, phone_number, evil_nickname)
   on public.profiles to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Resume storage: a private bucket with one folder per user (<user id>/...)
+-- ---------------------------------------------------------------------------
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'resumes',
+  'resumes',
+  false,
+  5242880, -- 5 MB
+  array[
+    'application/pdf',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  ]
+)
+on conflict (id) do update
+  set public = false,
+      file_size_limit = excluded.file_size_limit,
+      allowed_mime_types = excluded.allowed_mime_types;
+
+-- Candidates can only touch objects inside their own folder. Replacing a
+-- resume is an upsert, so it needs update as well as insert and select.
+drop policy if exists "Users can read own resume" on storage.objects;
+create policy "Users can read own resume"
+  on storage.objects for select
+  to authenticated
+  using (
+    bucket_id = 'resumes'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+  );
+
+drop policy if exists "Users can upload own resume" on storage.objects;
+create policy "Users can upload own resume"
+  on storage.objects for insert
+  to authenticated
+  with check (
+    bucket_id = 'resumes'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+  );
+
+drop policy if exists "Users can replace own resume" on storage.objects;
+create policy "Users can replace own resume"
+  on storage.objects for update
+  to authenticated
+  using (
+    bucket_id = 'resumes'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+  )
+  with check (
+    bucket_id = 'resumes'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+  );
+
+drop policy if exists "Users can delete own resume" on storage.objects;
+create policy "Users can delete own resume"
+  on storage.objects for delete
+  to authenticated
+  using (
+    bucket_id = 'resumes'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+  );
+
+drop policy if exists "Admins can read all resumes" on storage.objects;
+create policy "Admins can read all resumes"
+  on storage.objects for select
+  to authenticated
+  using (bucket_id = 'resumes' and public.is_admin());
 
 -- Create a profile whenever someone signs up. Optional name fields can be passed
 -- at sign-up via options.data. Role is NEVER read from user metadata, because

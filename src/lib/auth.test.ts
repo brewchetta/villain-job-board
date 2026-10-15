@@ -75,6 +75,7 @@ describe("getProfile", () => {
     first_name: "Ada",
     last_name: null,
     resume_id: null,
+    resume_path: null,
     phone_number: null,
     evil_nickname: "The Pruner",
   };

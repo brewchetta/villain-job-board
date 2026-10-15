@@ -344,3 +344,155 @@ main a.button:hover {
   border-left: 4px solid var(--red-bright);
   padding-left: 0.5rem;
 }
+
+/* Resume preview */
+.resume-status {
+  color: var(--muted);
+}
+
+/* Size matches RESUME_THUMB_WIDTH / RESUME_THUMB_HEIGHT in src/lib/resume.ts. */
+.resume-thumb {
+  position: relative;
+  display: block;
+  width: 160px;
+  height: 207px;
+  margin-bottom: 0.75rem;
+  padding: 0;
+  overflow: hidden;
+  background: #fff;
+  color: #222;
+  border: 2px solid var(--red);
+  border-radius: 6px;
+  cursor: zoom-in;
+}
+
+.resume-thumb:hover,
+.resume-thumb:focus-visible {
+  border-color: var(--green);
+  outline: none;
+}
+
+.resume-thumb .resume-status {
+  padding: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.resume-thumb-hint {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 0.3rem;
+  background: rgb(13 26 17 / 0.88);
+  color: var(--foreground);
+  font-size: 0.8rem;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.resume-thumb:hover .resume-thumb-hint,
+.resume-thumb:focus-visible .resume-thumb-hint {
+  opacity: 1;
+}
+
+.resume-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.resume-actions .inline-form {
+  margin-top: 0;
+}
+
+/* DOCX thumbnail: draw page 1 at full size, then docx-viewer.tsx scales it down. */
+.resume-docx-thumb {
+  position: relative;
+  width: 160px;
+  height: 207px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.resume-docx-thumb .docx-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: max-content;
+  padding: 0;
+  background: none;
+  transform-origin: 0 0;
+}
+
+.resume-docx-thumb .docx-wrapper > section.docx {
+  margin-bottom: 0;
+  box-shadow: none;
+}
+
+.resume-docx-thumb .docx-wrapper > section.docx:not(:first-child) {
+  display: none;
+}
+
+.resume-pdf-thumb {
+  width: 160px;
+  pointer-events: none;
+}
+
+.resume-pdf-pages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Modal */
+.resume-modal {
+  width: min(900px, 95vw);
+  max-width: none;
+  height: 90vh;
+  max-height: none;
+  padding: 0;
+  background: var(--surface);
+  color: var(--foreground);
+  border: 2px solid var(--trim);
+  border-radius: 8px;
+}
+
+.resume-modal[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.resume-modal::backdrop {
+  background: rgb(0 0 0 / 0.75);
+}
+
+.resume-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 2px solid var(--red);
+}
+
+.resume-modal-header .link-button {
+  color: var(--green);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.resume-modal-body {
+  flex: 1;
+  overflow: auto;
+  padding: 1rem;
+}
+
+.resume-docx-full .docx-wrapper {
+  padding: 0.5rem 0 0;
+}
+
+/* Keep the page behind the modal from scrolling under it. */
+body:has(.resume-modal[open]) {
+  overflow: hidden;
+}

@@ -4,6 +4,8 @@ import { getProfile, requireUser } from "@/lib/auth";
 import { getMyApplications } from "@/lib/applications";
 import { ProfileForm } from "../auth/forms";
 import { WithdrawButton } from "../applications/forms";
+import { resumeExtension } from "@/lib/resume";
+import { ResumeSection } from "../resume/resume-section";
 
 export const metadata = {
   title: "Your account | The Garden",
@@ -44,6 +46,10 @@ async function AccountContent() {
       </dl>
       <h2>Profile</h2>
       <ProfileForm profile={profile} />
+      <h2>Resume</h2>
+      <ResumeSection
+        ext={profile.resume_path ? resumeExtension(profile.resume_path) : null}
+      />
       <h2>My applications</h2>
       <Applications userId={user.id} />
     </>
